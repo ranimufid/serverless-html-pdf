@@ -1,0 +1,157 @@
+service: html-to-pdf-serverless
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: dev
+  region: eu-central-1
+  memorySize: 128
+
+environment:
+    IOPIPE_ENABLED: ${self:custom.iopipe_enabled}
+    IOPIPE_TOKEN: ${self:custom.iopipe_token}
+    IOPIPE_ENABLE_PROFILER: ${self:custom.iopipeEnableProfiler}
+
+plugins:
+  - serverless-plugin-iopipe
+  - serverless-sqs-alarms-plugin
+  - serverless-plugin-include-dependencies
+  - serverless-iam-roles-per-function
+
+custom:
+  region: ${self:provider.region}
+  stage: ${opt:stage, self:provider.stage}
+  prefix: ${self:custom.stage}-${self:service}
+  consumer: ${self:custom.prefix}-consumer
+  worker: ${self:custom.prefix}-worker
+  config: ${self:custom.prefix}-config
+  sns: ${self:custom.prefix}-trigger
+  sqs: ${self:custom.prefix}-messages
+  aws_account_id: ${file(./serverless.env.yml):${opt:stage}.aws_account_id}
+  iopipe_token: ${file(./serverless.env.yml):${opt:stage}.iopipe_token}
+  s3_bucket_name: ${file(./serverless.env.yml):${opt:stage}.s3_bucket_name}
+  iopipe_enabled: ${file(./serverless.env.yml):${opt:stage}.iopipe_enabled}
+  iopipeNoVerify: true
+  iopipeNoUpgrade: true
+  iopipeEnableProfiler: true
+
+  sqs-alarms:
+    - queue: ${self:custom.sqs}
+      topic: ${self:custom.sns}
+      thresholds:
+        - 1
+        - 50
+        - 100
+        - 500
+        - 1000
+        - 5000
+
+package:
+  exclude:
+    - helpers/**
+    - test/**
+
+functions:
+  scale:
+    timeout: 10
+    handler: functions/scale.handler
+    name: ${self:custom.prefix}-scale
+    environment:
+      config: ${self:custom.config}
+      IOPIPE_ENABLED: ${self:custom.iopipe_enabled}
+    events:
+      - sns: ${self:custom.sns}
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+        Resource: arn:aws:dynamodb:*:*:table/${self:custom.config}
+
+  consumer:
+    timeout: 10
+    handler: functions/consumer.handler
+    name: ${self:custom.prefix}-consumer
+    environment:
+      config: ${self:custom.config}
+      worker: ${self:custom.worker}
+      REGION: ${self:custom.region}
+      WORKER_LAMBDA_NAME: ${self:custom.prefix}-worker
+      AWS_ACCOUNT_ID: ${self:custom.aws_account_id}
+      SQS_QUEUE: ${self:custom.sqs}
+      IOPIPE_ENABLED: ${self:custom.iopipe_enabled}
+    events:
+      - schedule: rate(1 minute)
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - sqs:ReceiveMessage
+          - sqs:getQueueAttributes
+        Resource: arn:aws:sqs:*:*:${self:custom.sqs}
+      - Effect: Allow
+        Action:
+          - lambda:InvokeFunction
+        Resource: arn:aws:lambda:*:*:function:${self:custom.worker}
+
+  worker:
+    timeout: 300
+    memorySize: 1536
+    handler: functions/worker.handler
+    name: ${self:custom.prefix}-worker
+    environment:
+      REGION: ${self:custom.region}
+      SQS_QUEUE: ${self:custom.sqs}
+      AWS_ACCOUNT_ID: ${self:custom.aws_account_id}
+      DLQ_SQS_QUEUE: ${self:custom.sqs}-dead-letter-queue
+      IOPIPE_ENABLED: ${self:custom.iopipe_enabled}
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - sqs:DeleteMessage
+          - sqs:ReceiveMessage
+          - sqs:getQueueAttributes
+        Resource: arn:aws:sqs:*:*:${self:custom.sqs}
+      - Effect: Allow
+        Action:
+          - sqs:SendMessage
+        Resource: arn:aws:sqs:*:*:${self:custom.sqs}-dead-letter-queue
+      - Effect: Allow
+        Action: "s3:*"
+        Resource: "arn:aws:s3:::${self:custom.s3_bucket_name}/*"
+
+resources:
+  Resources:
+    Messages:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.sqs}
+        MessageRetentionPeriod: 1209600
+        VisibilityTimeout: 60
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+            - MessagesDeadLetterQueue
+            - Arn
+          maxReceiveCount: 10
+
+    MessagesDeadLetterQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.sqs}-dead-letter-queue
+        MessageRetentionPeriod: 1209600
+
+    Config:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.config}
+        AttributeDefinitions:
+          - AttributeName: key
+            AttributeType: S
+        KeySchema:
+          - AttributeName: key
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5

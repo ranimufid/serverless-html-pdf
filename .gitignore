@@ -1,0 +1,17 @@
+# package directories
+node_modules
+jspm_packages
+npm-debug.log
+yarn-error.log
+
+# Serverless directories & files
+.serverless
+serverless.env.yml
+
+# custom dummy files & directories
+message-generator
+*.htm
+*.pdf
+event.json
+*_bkup*
+.DS_Store

@@ -1,0 +1,6 @@
+{
+    "MessageId": "46f6f2a0-49f2-4852-afe1-d766f7293534",
+    "ReceiptHandle": "AQEB0ANpkmYWuzL/tqM5sMCl3951Wg82SgM+VpqOzXcPLuB+VC+O18hnWHfJU2PRIPWGC0PbzCGN4iGaUxtusAzIBpFEZXkVjzCrNXhPSewxYEUHdcMaI1lrdpeRt7xWVirCgQSoqfLLuAkigLuLATtC1sys8d+F9cJB72Xxc6o05R1vCkYKSIfpmBeo24luddZgcPU6iwCM6yzyphn8GFmNIlhMv+RkY1VQhSOKYKLaWpo0d6YJxa+m/o0MrDA0oCpiGpUBibXKA88jsTkwSM/dEeT5+KVzYSpW2PwdZQd3c/ndCFeTFyHSztBERD+ffO6NUcS5qQMVY+/m4pzZJw5ZBs3/D+pW5vxEn1r/uZX4G0ybQJDKeSoRXttcrM9hYTDQ/oeQ7/PhhSdwmu4vJrkvLwoXvIBFwpiEcNVDnQGD96Q=",
+    "MD5OfBody": "1d13a77bb453eb62e1e3e864b2f0b010",
+    "Body": "{\"bucketName\":\"{BUCKET_NAME}\",\"fileName\":\"sample_report.htm\",\"options\":{\"pageSize\":\"A4\"}}"
+}
