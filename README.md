@@ -1,6 +1,6 @@
-# ⚡️ html to pdf conversion SQS Worker with Serverless
+# ⚡️ HTML to PDF conversion SQS Worker
 
-This serverless app creates consumers and workers that process incoming messages from an SQS queue. The workers convert the provided html (living on an S3 bucket) to a pdf which is finally uploaded to the same bucket. Additionally, this serverless project uses [iopipe](https://www.iopipe.com/) for lambda tracing and debugging.
+This serverless app creates consumers and workers that process incoming messages from an SQS queue. The workers convert an HTML (in an S3 bucket) to a pdf which is finally uploaded to the same bucket. Additionally, this serverless project uses [iopipe](https://www.iopipe.com/) for lambda tracing and debugging.
 
 ## Components
 - SQS Queue to hold messages
@@ -21,10 +21,10 @@ This serverless app creates consumers and workers that process incoming messages
 
 ## Getting Started
 
-1. `yarn aws-init`: script to instantiate the serverless work environment (yarn install --> create s3 bucket to store html and pdf files --> generates serverless.env.yml)
-2. `yarn deploy`: deploys your serverless code to AWS
-3. `yarn test`: trigger tests (optional)
-4. `sls invoke local -f worker --stage dev --path event.json`: will convert the sample html uploaded by `yarn aws-init` to a pdf with unique file name
+1. _`yarn aws-init`_: script to instantiate the serverless work environment (yarn install --> create s3 bucket to store html and pdf files --> generates serverless.env.yml)
+2. _`yarn deploy`_: deploys your serverless code to AWS
+3. _`yarn test`_: trigger tests (optional)
+4. _`sls invoke local -f worker --stage dev --path event.json`_: will convert the sample html uploaded by `yarn aws-init` to a pdf with unique file name
 
 ## Todo
 1. Fix `html-pdf.spec.js` test scenario
