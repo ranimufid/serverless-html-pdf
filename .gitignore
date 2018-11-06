@@ -10,7 +10,6 @@ serverless.env.yml
 
 # custom dummy files & directories
 message-generator
-*.htm
 *.pdf
 event.json
 *_bkup*
