@@ -7,11 +7,6 @@ provider:
   region: eu-central-1
   memorySize: 128
 
-environment:
-    IOPIPE_ENABLED: ${self:custom.iopipe_enabled}
-    IOPIPE_TOKEN: ${self:custom.iopipe_token}
-    IOPIPE_ENABLE_PROFILER: ${self:custom.iopipeEnableProfiler}
-
 plugins:
   - serverless-plugin-iopipe
   - serverless-sqs-alarms-plugin
@@ -31,9 +26,7 @@ custom:
   iopipe_token: ${file(./serverless.env.yml):${opt:stage}.iopipe_token}
   s3_bucket_name: ${file(./serverless.env.yml):${opt:stage}.s3_bucket_name}
   iopipe_enabled: ${file(./serverless.env.yml):${opt:stage}.iopipe_enabled}
-  iopipeNoVerify: true
-  iopipeNoUpgrade: true
-  iopipeEnableProfiler: true
+  iopipe_logger_enabled: ${file(./serverless.env.yml):${opt:stage}.iopipe_logger_enabled}
 
   sqs-alarms:
     - queue: ${self:custom.sqs}
@@ -59,6 +52,7 @@ functions:
     environment:
       config: ${self:custom.config}
       IOPIPE_ENABLED: ${self:custom.iopipe_enabled}
+      IOPIPE_LOGGER_ENABLED: ${self:custom.iopipe_logger_enabled}
     events:
       - sns: ${self:custom.sns}
     iamRoleStatementsInherit: true
@@ -80,6 +74,7 @@ functions:
       AWS_ACCOUNT_ID: ${self:custom.aws_account_id}
       SQS_QUEUE: ${self:custom.sqs}
       IOPIPE_ENABLED: ${self:custom.iopipe_enabled}
+      IOPIPE_LOGGER_ENABLED: ${self:custom.iopipe_logger_enabled}
     events:
       - schedule: rate(1 minute)
     iamRoleStatementsInherit: true
@@ -105,6 +100,7 @@ functions:
       AWS_ACCOUNT_ID: ${self:custom.aws_account_id}
       DLQ_SQS_QUEUE: ${self:custom.sqs}-dead-letter-queue
       IOPIPE_ENABLED: ${self:custom.iopipe_enabled}
+      IOPIPE_LOGGER_ENABLED: ${self:custom.iopipe_logger_enabled}
     iamRoleStatementsInherit: true
     iamRoleStatements:
       - Effect: Allow
